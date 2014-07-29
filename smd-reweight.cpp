@@ -60,6 +60,10 @@ int main(int argc,char*argv[]){
   int nbins=100;
   double tolerance=1e-4;
 
+  double hmin,hmax;
+  bool hminset=false;
+  bool hmaxset=false;
+
   string next="";
   for(int i=1;i<argc;i++){
     string a(argv[i]);
@@ -69,16 +73,30 @@ int main(int argc,char*argv[]){
       else if(next=="--maxiter")   is>>maxiter;
       else if(next=="--kt")        is>>kT;
       else if(next=="--tolerance") is>>tolerance;
+      else if(next=="--hmin"){
+        if(a!="auto"){
+          is>>hmin;
+          hminset=true;
+        }
+      }
+      else if(next=="--hmax"){
+        if(a!="auto"){
+          is>>hmax;
+          hmaxset=true;
+        }
+      }
       else assert(0);
       next="";
       continue;
     }
-    if(a=="--nbins" || a=="--maxiter" || a=="--kt" || a=="--tolerance"){
+    if(a=="--nbins" || a=="--maxiter" || a=="--kt" || a=="--tolerance" || a=="--hmin" || a=="--hmax"){
       next=a;
     } else if(a=="--help" || a=="-h"){
       cout<<"\nUsage:\n"
           <<"  smd-reweight [-h|--help] [--nbins n] [--kt kt] [--maxiter m] [--tolerance tol]\n"
           <<"--nbins     (default=100)  : number of bins in the analyzed CV\n"
+          <<"--hmin      (default=auto) : minimum of the histogram (auto means min value-1e-5)\n"
+          <<"--hmax      (default=auto) : maximum of the histogram (auto means max value+1e-5)\n"
           <<"--kt        (default=2.49) : kt in energy units\n"
           <<"--maxiter   (default=10)   : maximum number of iterations in self-consistent cycle\n"
           <<"--tolerance (default=1e-4) : tolerance in self-consistent cycle\n\n"
@@ -185,6 +203,11 @@ int main(int argc,char*argv[]){
       ana_min=ana[iframe][itraj]-1e-5;
     }
   }
+
+  if(hminset) ana_min=hmin;
+  if(hmaxset) ana_max=hmax;
+
+  cout<<"# Histogram range "<<ana_min<<" "<<ana_max<<"\n";
 
 // Jarzynski calculation
   vector<double> jarz(nframe);
