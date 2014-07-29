@@ -22,6 +22,7 @@
 #include <string>
 #include <sstream>
 #include <assert.h>
+#include <cstdlib>
 
 // Tool to allow 2D arrays
 template<class T>
