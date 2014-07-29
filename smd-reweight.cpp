@@ -76,11 +76,29 @@ int main(int argc,char*argv[]){
     if(a=="--nbins" || a=="--maxiter" || a=="--kt" || a=="--tolerance"){
       next=a;
     } else if(a=="--help" || a=="-h"){
-      cout<<"\nUsage: smd-reweight [-h|--help] [--nbins n] [--kt kt] [--maxiter m] [--tolerance tol]\n"
+      cout<<"\nUsage:\n"
+          <<"  smd-reweight [-h|--help] [--nbins n] [--kt kt] [--maxiter m] [--tolerance tol]\n"
           <<"--nbins     (default=100)  : number of bins in the analyzed CV\n"
           <<"--kt        (default=2.49) : kt in energy units\n"
           <<"--maxiter   (default=10)   : maximum number of iterations in self-consistent cycle\n"
-          <<"--tolerance (default=1e-4) : tolerance in self-consistent cycle\n\n";
+          <<"--tolerance (default=1e-4) : tolerance in self-consistent cycle\n\n"
+          <<"The program expects from standard input a file with colums\n"
+          <<"time pulled_cv position_of_restraint stiffness_of_restraint work analyzed_cv\n"
+          <<"First column is used to detect new trajectories, so that you can just concatenate:\n\n"
+          <<"cat COLVAR* | smd-reweight\n\n"
+          <<"A suitable COLVAR file can be produced with this sample PLUMED 2.1 input:\n"
+          <<"\n"
+          <<"# pulled distance:\n"
+          <<"d: DISTANCE ATOMS=1,2\n"
+          <<"# moving restraint:\n"
+          <<"r: MOVINGRESTRAINT AT0=0 AT1=1 STEP0=0 STEP1=100000 KAPPA0=20000.0\n"
+          <<"# analyzed distance:\n"
+          <<"a: DISTANCE ATOMS=3,4\n"
+          <<"# print colvar file:\n"
+          <<"PRINT ARG=d,r.d_cntr,r.d_kappa,r.d_work,a FILE=COLVAR\n"
+          <<"\n"
+          <<"Lines beginning with '#' are ignored\n"
+          <<"All units should be coherent.\n\n";
       exit(0);
     } else {
       cerr<<"ERROR: Unknown option "<<a<<"\n";
