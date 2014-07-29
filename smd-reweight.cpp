@@ -55,12 +55,49 @@ using namespace std;
 
 int main(int argc,char*argv[]){
 // Default parameters
-  const double kT=2.49;
-  const double invkT=1.0/kT;
-  const int maxiter=10;
-  const int nbins=100;
-  const double tolerance=1e-4;
+  double kT=2.49;
+  int maxiter=10;
+  int nbins=100;
+  double tolerance=1e-4;
 
+  string next="";
+  for(int i=1;i<argc;i++){
+    string a(argv[i]);
+    istringstream is(a);
+    if(next.length()>0){
+      if     (next=="--nbins")      is>>nbins;
+      else if(next=="--maxiter")   is>>maxiter;
+      else if(next=="--kt")        is>>kT;
+      else if(next=="--tolerance") is>>tolerance;
+      else assert(0);
+      next="";
+      continue;
+    }
+    if(a=="--nbins" || a=="--maxiter" || a=="--kt" || a=="--tolerance"){
+      next=a;
+    } else if(a=="--help" || a=="-h"){
+      cout<<"\nUsage: smd-reweight [-h|--help] [--nbins n] [--kt kt] [--maxiter m] [--tolerance tol]\n"
+          <<"--nbins     (default=100)  : number of bins in the analyzed CV\n"
+          <<"--kt        (default=2.49) : kt in energy units\n"
+          <<"--maxiter   (default=10)   : maximum number of iterations in self-consistent cycle\n"
+          <<"--tolerance (default=1e-4) : tolerance in self-consistent cycle\n\n";
+      exit(0);
+    } else {
+      cerr<<"ERROR: Unknown option "<<a<<"\n";
+      exit(1);
+    }
+  }
+  if(next.length()>0){
+    cerr<<"ERROR: Needs argument for "<<next<<"\n";
+    exit(1);
+  }
+
+  cout<<"# number of bins "<<nbins<<endl;
+  cout<<"# tolerance "<<tolerance<<endl;
+  cout<<"# kt "<<kT<<endl;
+  cout<<"# maximum number of iterations "<<maxiter<<endl;
+
+  const double invkT=1.0/kT;
 // number of frames
   int nframe=0;
 
@@ -89,7 +126,10 @@ int main(int argc,char*argv[]){
     cout<<"# number of frames "<<nframe<<endl;
     cout<<"# number of trajectories "<<ntraj<<endl;
 // consistency check 
-    assert(file.size()%nframe==0);
+    if(file.size()%nframe!=0){
+      cerr<<"ERROR: inconsistent trajectory files ("<<file.size()<<" lines for "<<nframe<<" frames\n";
+      exit(1);
+    }
   }
   
   Array2d<double> dist(nframe,ntraj);
