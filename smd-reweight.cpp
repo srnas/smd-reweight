@@ -209,7 +209,8 @@ int main(int argc,char*argv[]){
 // normalization of weights
   double norm=0.0;
   for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) norm+=weights[iframe][itraj];
-  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) weights[iframe][itraj]/=norm;
+  double invnorm=1.0/norm;
+  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) weights[iframe][itraj]*=invnorm;
 
 // change this if you want the non-consistent weighted histogram
   if(false){
@@ -254,7 +255,8 @@ for(int iter=0;iter<maxiter;iter++){
     weights[iframe][itraj]=noneq[iframe][itraj]*exp(F[iframe]*invkT)/j;
     norm+=weights[iframe][itraj];
   }
-  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) weights[iframe][itraj]/=norm;
+  double invnorm=1.0/norm;
+  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) weights[iframe][itraj]*=invnorm;
 
 // recompute weighted histogram
   histo.assign(histo.size(),0.0);
