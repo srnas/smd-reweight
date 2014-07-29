@@ -100,17 +100,19 @@ int main(int argc,char*argv[]){
       next=a;
     } else if(a=="--help" || a=="-h"){
       cout<<"\nUsage:\n"
-          <<"  smd-reweight [-h|--help] [--nbins n] [--kt kt] [--maxiter m] [--tolerance tol]\n"
-          <<"--nbins     (default=100)  : number of bins in the analyzed CV (integer or the 'int' string)\n"
-          <<"--hmin      (default=auto) : minimum of the histogram (auto means min value)\n"
-          <<"--hmax      (default=auto) : maximum of the histogram (auto means max value)\n"
-          <<"--kt        (default=2.49) : kt in energy units\n"
-          <<"--maxiter   (default=10)   : maximum number of iterations in self-consistent cycle\n"
-          <<"--tolerance (default=1e-4) : tolerance in self-consistent cycle\n\n"
+          <<"  smd-reweight [flags] < file_with_concatenated_trajectories\n"
+          <<"List of possible flags:\n"
+          <<"--nbins     (default=100)    : number of bins in the analyzed CV ('int' means integer bins)\n"
+          <<"--hmin      (default='auto') : minimum of the histogram ('auto' means min value)\n"
+          <<"--hmax      (default='auto') : maximum of the histogram ('auto' means max value)\n"
+          <<"--kt        (default=2.49)   : kt in energy units\n"
+          <<"--maxiter   (default=10)     : maximum number of iterations in self-consistent cycle\n"
+          <<"--tolerance (default=1e-4)   : tolerance in self-consistent cycle\n\n"
           <<"Use '--nbins int' to have integer bins.\n"
-          <<"The program expects from standard input a file with colums\n"
-          <<"time pulled_cv position_of_restraint stiffness_of_restraint work analyzed_cv\n"
-          <<"First column is used to detect new trajectories, so that you can just concatenate:\n\n"
+          <<"The program expects from standard input a file with these columns:\n\n"
+          <<"time pulled_cv position_of_restraint stiffness_of_restraint work analyzed_cv\n\n"
+          <<"Lines beginning with '#' are ignored. First column is used to detect new trajectories,\n"
+          <<"so that one can just concatenate them:\n\n"
           <<"cat COLVAR* | smd-reweight\n\n"
           <<"A suitable COLVAR file can be produced with this sample PLUMED 2.1 input:\n"
           <<"\n"
@@ -123,8 +125,7 @@ int main(int argc,char*argv[]){
           <<"# print colvar file:\n"
           <<"PRINT ARG=d,r.d_cntr,r.d_kappa,r.d_work,a FILE=COLVAR\n"
           <<"\n"
-          <<"Lines beginning with '#' are ignored\n"
-          <<"All units should be coherent.\n\n";
+          <<"All units should be consistent.\n\n";
       exit(0);
     } else {
       cerr<<"ERROR: Unknown option "<<a<<"\n";
