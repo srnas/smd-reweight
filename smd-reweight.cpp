@@ -262,12 +262,16 @@ for(int iter=0;iter<maxiter;iter++){
 
 // compute weights
   double norm=0.0;
+  vector<double> tmp(nframe);
   for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) {
     double j=0;
+    double kk=-0.5*kappa[iframe][itraj];
+    double dd=dist[iframe][itraj];
     for(int jframe=0;jframe<nframe;jframe++){
-      double e=dist[iframe][itraj]-dum[jframe][itraj];
-      j+=exp(-0.5*kappa[iframe][itraj]*e*e*invkT+F[jframe]*invkT);
+      double e=dd-dum[jframe][itraj];
+      tmp[jframe]=kk*e*e*invkT+F[jframe]*invkT;
     }
+    for(int jframe=0;jframe<nframe;jframe++) j+=exp(tmp[jframe]);
     weights[iframe][itraj]=noneq[iframe][itraj]*exp(F[iframe]*invkT)/j;
     norm+=weights[iframe][itraj];
   }
@@ -292,9 +296,12 @@ for(int iter=0;iter<maxiter;iter++){
 // update estimated F
   for(int jframe=0;jframe<nframe;jframe++){
     double j=0;
-    for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) {
-      double e=dist[iframe][itraj]-dum[jframe][itraj];
-      j+=weights[iframe][itraj]*exp(-0.5*kappa[iframe][itraj]*e*e*invkT);
+    for(int itraj=0;itraj<ntraj;itraj++){
+      for(int iframe=0;iframe<nframe;iframe++) {
+        double e=dist[iframe][itraj]-dum[jframe][itraj];
+        tmp[iframe]=-0.5*kappa[iframe][itraj]*e*e*invkT;
+      }
+      for(int iframe=0;iframe<nframe;iframe++) j+=weights[iframe][itraj]*exp(tmp[iframe]);
     }
     F[jframe]=-kT*log(j);
   }
