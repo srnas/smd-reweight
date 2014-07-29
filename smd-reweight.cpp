@@ -247,25 +247,6 @@ int main(int argc,char*argv[]){
   double invnorm=1.0/norm;
   for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) weights[iframe][itraj]*=invnorm;
 
-// change this if you want the non-consistent weighted histogram
-  if(false){
-    histo.assign(histo.size(),0.0);
-    for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++){
-      int i=(int) (0.5+(ana[iframe][itraj]-ana_min)/(ana_max-ana_min)*(histo.size()-1));
-      if(i==histo.size())i=histo.size()-1;
-      assert(i>=0 && i<histo.size());
-      histo[i]+=weights[iframe][itraj];
-    }
-
-    ofstream of("histo-non-consistent");
-    for(int i=0;i<histo.size();i++) of<<ana_min+i*(ana_max-ana_min)/(histo.size()-1)<<" "
-                                      <<-kT*log(histo[i])<<endl;
-    ofstream ofw("weights-non-consistent");
-    for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++){
-      ofw<<-kT*log(weights[iframe][itraj])<<endl;
-    }
-  }
-
 // plain jarzinsky used for first guess of F
   vector<double> F=jarz;
   {
