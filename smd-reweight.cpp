@@ -64,12 +64,18 @@ int main(int argc,char*argv[]){
   bool hminset=false;
   bool hmaxset=false;
 
+  bool intbin=false;
+
   string next="";
   for(int i=1;i<argc;i++){
     string a(argv[i]);
     istringstream is(a);
     if(next.length()>0){
-      if     (next=="--nbins")      is>>nbins;
+      if     (next=="--nbins"){
+        if(a!="int"){
+          is>>nbins;
+        } else intbin=true;
+      }
       else if(next=="--maxiter")   is>>maxiter;
       else if(next=="--kt")        is>>kT;
       else if(next=="--tolerance") is>>tolerance;
@@ -94,12 +100,13 @@ int main(int argc,char*argv[]){
     } else if(a=="--help" || a=="-h"){
       cout<<"\nUsage:\n"
           <<"  smd-reweight [-h|--help] [--nbins n] [--kt kt] [--maxiter m] [--tolerance tol]\n"
-          <<"--nbins     (default=100)  : number of bins in the analyzed CV\n"
-          <<"--hmin      (default=auto) : minimum of the histogram (auto means min value-1e-5)\n"
-          <<"--hmax      (default=auto) : maximum of the histogram (auto means max value+1e-5)\n"
+          <<"--nbins     (default=100)  : number of bins in the analyzed CV (integer or the 'int' string)\n"
+          <<"--hmin      (default=auto) : minimum of the histogram (auto means min value)\n"
+          <<"--hmax      (default=auto) : maximum of the histogram (auto means max value)\n"
           <<"--kt        (default=2.49) : kt in energy units\n"
           <<"--maxiter   (default=10)   : maximum number of iterations in self-consistent cycle\n"
           <<"--tolerance (default=1e-4) : tolerance in self-consistent cycle\n\n"
+          <<"Use '--nbins int' to have integer bins.\n"
           <<"The program expects from standard input a file with colums\n"
           <<"time pulled_cv position_of_restraint stiffness_of_restraint work analyzed_cv\n"
           <<"First column is used to detect new trajectories, so that you can just concatenate:\n\n"
@@ -128,7 +135,6 @@ int main(int argc,char*argv[]){
     exit(1);
   }
 
-  cout<<"# number of bins "<<nbins<<endl;
   cout<<"# tolerance "<<tolerance<<endl;
   cout<<"# kt "<<kT<<endl;
   cout<<"# maximum number of iterations "<<maxiter<<endl;
@@ -190,17 +196,16 @@ int main(int argc,char*argv[]){
   }
   file.resize(0);
 
-  vector<double> histo(nbins);
 
 // find min and max for analyzed variable
   double ana_max=ana[0][0];
   double ana_min=ana[0][0];
   for(int iframe=0;iframe<nframe;iframe++) for(int itraj=0;itraj<ntraj;itraj++){
     if(ana[iframe][itraj]>ana_max){
-      ana_max=ana[iframe][itraj]+1e-5;
+      ana_max=ana[iframe][itraj];
     }
     if(ana[iframe][itraj]<ana_min){
-      ana_min=ana[iframe][itraj]-1e-5;
+      ana_min=ana[iframe][itraj];
     }
   }
 
@@ -208,6 +213,11 @@ int main(int argc,char*argv[]){
   if(hmaxset) ana_max=hmax;
 
   cout<<"# Histogram range "<<ana_min<<" "<<ana_max<<"\n";
+  if(intbin){
+    nbins=int(ana_max+0.5)-int(ana_min+0.5)+1;
+  }
+  cout<<"# Number of bins "<<nbins<<endl;
+  vector<double> histo(nbins);
 
 // Jarzynski calculation
   vector<double> jarz(nframe);
@@ -239,14 +249,14 @@ int main(int argc,char*argv[]){
   if(false){
     histo.assign(histo.size(),0.0);
     for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++){
-      int i=(int) ((ana[iframe][itraj]-ana_min)/(ana_max-ana_min)*histo.size());
+      int i=(int) (0.5+(ana[iframe][itraj]-ana_min)/(ana_max-ana_min)*(histo.size()-1));
       if(i==histo.size())i=histo.size()-1;
       assert(i>=0 && i<histo.size());
       histo[i]+=weights[iframe][itraj];
     }
 
     ofstream of("histo-non-consistent");
-    for(int i=0;i<histo.size();i++) of<<ana_min+(ana_max-ana_min)*(i+0.5)/histo.size()<<" "
+    for(int i=0;i<histo.size();i++) of<<ana_min+i*(ana_max-ana_min)/(histo.size()-1)<<" "
                                       <<-kT*log(histo[i])<<endl;
     ofstream ofw("weights-non-consistent");
     for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++){
@@ -284,7 +294,7 @@ for(int iter=0;iter<maxiter;iter++){
 // recompute weighted histogram
   histo.assign(histo.size(),0.0);
   for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++){
-    int i=(int) ((ana[iframe][itraj]-ana_min)/(ana_max-ana_min)*histo.size());
+    int i=(int) (0.5+(ana[iframe][itraj]-ana_min)/(ana_max-ana_min)*(histo.size()-1));
     if(i==histo.size())i=histo.size()-1;
     assert(i>=0 && i<histo.size());
     histo[i]+=weights[iframe][itraj];
@@ -292,7 +302,7 @@ for(int iter=0;iter<maxiter;iter++){
   {
 // this is a small file, so we rewrite it at every iteration
     ofstream of("histo");
-    for(int i=0;i<histo.size();i++) of<<ana_min+(ana_max-ana_min)*(i+0.5)/histo.size()<<" "
+    for(int i=0;i<histo.size();i++) of<<ana_min+i*(ana_max-ana_min)/(histo.size()-1)<<" "
                                       <<-kT*log(histo[i])<<endl;
   }
 
