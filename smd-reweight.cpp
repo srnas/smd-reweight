@@ -44,6 +44,10 @@ public:
         inline T const* operator[](int i) const {return (m_data + (m_col*i));}
         inline int row()const{return m_row;}
         inline int col()const{return m_col;}
+        inline void swap(Array2d&x){
+          assert(row()==x.row() && col()==x.col());
+          T*tmp; tmp=x.m_data; x.m_data=m_data; m_data=tmp;
+        }
 protected:
         Array2d& operator=(const Array2d&);
 private:
@@ -258,7 +262,7 @@ int main(int argc,char*argv[]){
 for(int iter=0;iter<maxiter;iter++){
 
 // store past weights
-  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) previousWeights[iframe][itraj]=weights[iframe][itraj];
+  previousWeights.swap(weights);
 
 // compute weights
   double norm=0.0;
