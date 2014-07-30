@@ -271,18 +271,24 @@ for(int iter=0;iter<maxiter;iter++){
 
 // compute weights
   double norm=0.0;
-  vector<double> tmp(nframe);
-  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) {
-    double j=0;
-    double kk=-0.5*kappa[iframe][itraj];
-    double dd=dist[iframe][itraj];
-    for(int jframe=0;jframe<nframe;jframe++){
-      double e=dd-dum[jframe][itraj];
-      tmp[jframe]=kk*e*e*invkT+F[jframe]*invkT;
+#pragma omp parallel for
+  for(int iframe=0;iframe<nframe;iframe++){
+    vector<double> tmp(nframe);
+    for(int itraj=0;itraj<ntraj;itraj++){
+      double j=0;
+      double kk=-0.5*kappa[iframe][itraj];
+      double dd=dist[iframe][itraj];
+      for(int jframe=0;jframe<nframe;jframe++){
+        double e=dd-dum[jframe][itraj];
+        tmp[jframe]=kk*e*e*invkT+F[jframe]*invkT;
+      }
+      for(int jframe=0;jframe<nframe;jframe++) j+=exp(tmp[jframe]);
+#pragma omp critical
+      {
+        weights[iframe][itraj]=noneq[iframe][itraj]*exp(F[iframe]*invkT)/j;
+        norm+=weights[iframe][itraj];
+      }
     }
-    for(int jframe=0;jframe<nframe;jframe++) j+=exp(tmp[jframe]);
-    weights[iframe][itraj]=noneq[iframe][itraj]*exp(F[iframe]*invkT)/j;
-    norm+=weights[iframe][itraj];
   }
   double invnorm=1.0/norm;
   for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++) weights[iframe][itraj]*=invnorm;
@@ -308,7 +314,9 @@ for(int iter=0;iter<maxiter;iter++){
   }
 
 // update estimated F
+#pragma omp parallel for
   for(int jframe=0;jframe<nframe;jframe++){
+    vector<double> tmp(nframe);
     double j=0;
     for(int itraj=0;itraj<ntraj;itraj++){
       for(int iframe=0;iframe<nframe;iframe++) {
@@ -317,14 +325,22 @@ for(int iter=0;iter<maxiter;iter++){
       }
       for(int iframe=0;iframe<nframe;iframe++) j+=weights[iframe][itraj]*exp(tmp[iframe]);
     }
+#pragma omp critical
     F[jframe]=-kT*log(j);
   }
 
 // compute error
   double eps=0.0;
-  for(int itraj=0;itraj<ntraj;itraj++) for(int iframe=0;iframe<nframe;iframe++){
-    double e=kT*log(weights[iframe][itraj]/previousWeights[iframe][itraj]);
-    eps+=e*e;
+#pragma omp parallel for
+  for(int iframe=0;iframe<nframe;iframe++){
+    double tmp=0;
+    for(int itraj=0;itraj<ntraj;itraj++)
+    {
+      double e=kT*log(weights[iframe][itraj]/previousWeights[iframe][itraj]);
+      tmp+=e*e;
+    }
+#pragma omp critical
+    eps+=tmp;
   }
   eps/=(nframe*ntraj);
 
