@@ -71,6 +71,8 @@ int main(int argc,char*argv[]){
 
   bool intbin=false;
 
+  bool align_to_zero=false;
+
   string next="";
   for(int i=1;i<argc;i++){
     string a(argv[i]);
@@ -111,7 +113,8 @@ int main(int argc,char*argv[]){
           <<"--hmax      (default='auto') : maximum of the histogram ('auto' means max value)\n"
           <<"--kt        (default=2.49)   : kt in energy units\n"
           <<"--maxiter   (default=10)     : maximum number of iterations in self-consistent cycle\n"
-          <<"--tolerance (default=1e-4)   : tolerance in self-consistent cycle\n\n"
+          <<"--tolerance (default=1e-4)   : tolerance in self-consistent cycle\n"
+          <<"--align-to-zero              : align free-energy minumum\n\n"
           <<"Use '--nbins int' to have integer bins.\n"
           <<"The program expects from standard input a file with these columns:\n\n"
           <<"time pulled_cv position_of_restraint stiffness_of_restraint work analyzed_cv\n\n"
@@ -131,6 +134,8 @@ int main(int argc,char*argv[]){
           <<"\n"
           <<"All units should be consistent.\n\n";
       exit(0);
+    } else if(a=="--align-to-zero"){
+      align_to_zero=true;
     } else {
       cerr<<"ERROR: Unknown option "<<a<<"\n";
       exit(1);
@@ -289,6 +294,11 @@ for(int iter=0;iter<maxiter;iter++){
     if(i==histo.size())i=histo.size()-1;
     assert(i>=0 && i<histo.size());
     histo[i]+=weights[iframe][itraj];
+  }
+  if(align_to_zero){
+    double zero=histo[0];
+    for(int i=0;i<histo.size();i++) if(histo[i]>zero)zero=histo[i];
+    for(int i=0;i<histo.size();i++) histo[i]/=zero;
   }
   {
 // this is a small file, so we rewrite it at every iteration
