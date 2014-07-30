@@ -1,0 +1,5 @@
+smd-reweight
+*.dSYM
+config.*
+autom4te.cache
+Makefile
