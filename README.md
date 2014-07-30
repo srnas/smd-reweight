@@ -6,7 +6,13 @@ using the formalism introduced in Colizzi and Bussi, J. Am. Chem. Soc., 134, 517
 
 First compile the source smd-reweight.cpp with a suitable compiler, e.g.
 
-    g++ -O2 smd-reweight.cpp -o smd-reweight
+    ./configure CXX=g++
+    make
+
+or
+
+    ./configure CXX=icpc
+    make
 
 Then ask for help
 
