@@ -1,0 +1,12 @@
+CXX=@CXX@
+CXXFLAGS=@CXXFLAGS@
+CPPFLAGS=@CPPFLAGS@ @DEFS@
+
+smd-reweight: smd-reweight.cpp Makefile
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) smd-reweight.cpp -o smd-reweight
+
+.PHONY: clean
+
+clean:
+	rm -fr smd-reweight
+
